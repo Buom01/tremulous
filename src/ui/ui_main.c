@@ -1419,7 +1419,9 @@ void UI_Refresh(int realtime)
 UI_Shutdown
 =================
 */
-void UI_Shutdown(void) { trap_LAN_SaveCachedServers(); }
+void UI_Shutdown(void) {
+  trap_LAN_SaveCachedServers();
+}
 
 qboolean Asset_Parse(int handle)
 {
@@ -2670,9 +2672,10 @@ static qboolean UI_OwnerDrawVisible(int flags)
 
 static qboolean UI_NetSource_HandleKey(int key)
 {
-    if (key == K_MOUSE1 || key == K_MOUSE2 || key == K_ENTER || key == K_KP_ENTER)
+    if (key == K_MOUSE1 || key == K_MOUSE2 || key == K_ENTER || key == K_KP_ENTER
+        || key == K_PAD0_A || key == K_PAD0_B)
     {
-        if (key == K_MOUSE2)
+        if (key == K_MOUSE2 || key == K_PAD0_B)
         {
             ui_netSource.integer--;
 
@@ -5353,6 +5356,7 @@ void UI_Init(qboolean inGameLoad)
     uiInfo.uiDC.feederInitialise = &UI_FeederInitialise;
     uiInfo.uiDC.setBinding = &trap_Key_SetBinding;
     uiInfo.uiDC.getBindingBuf = &trap_Key_GetBindingBuf;
+    uiInfo.uiDC.isDown = &trap_Key_IsDown;
     uiInfo.uiDC.keynumToStringBuf = &trap_Key_KeynumToStringBuf;
     uiInfo.uiDC.executeText = &trap_Cmd_ExecuteText;
     uiInfo.uiDC.Error = &Com_Error;
@@ -5408,7 +5412,8 @@ void UI_KeyEvent(int key, qboolean down)
 
         if (menu)
         {
-            if (key == K_ESCAPE && down && !Menus_AnyFullScreenVisible())
+            if ( (key == K_ESCAPE || key == K_PAD0_BACK || key == K_PAD0_GUIDE || key == K_PAD0_B)
+                    && down && !Menus_AnyFullScreenVisible() && !Display_KeyBindPending() )
                 Menus_CloseAll();
             else
                 Menu_HandleKey(menu, key, down);
