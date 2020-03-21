@@ -1854,7 +1854,7 @@ void UI_EscapeEmoticons(char *dest, const char *src, int destsize)
 
     for (; *src && destsize > 1; src++, destsize--)
     {
-        if (UI_Text_IsEmoticon(src, &escaped, &len, NULL, NULL) && !escaped)
+        if (UI_Text_IsEmoticon(src, &escaped, &len, NULL, NULL, NULL, NULL) && !escaped)
         {
             *dest++ = '[';
             destsize--;
@@ -1866,11 +1866,25 @@ void UI_EscapeEmoticons(char *dest, const char *src, int destsize)
     *dest++ = '\0';
 }
 
-qboolean UI_Text_IsEmoticon(const char *s, qboolean *escaped, int *length, qhandle_t *h, int *width)
+static qboolean UI_EmoticonMatch(char *filename, char *emoticon)
+{
+  while (*filename && *emoticon)
+  {
+    if (*filename == *emoticon || (*filename == '*' && *(filename + 1) == *emoticon && ++filename))
+      filename++;
+    else if (*filename != '*')
+      return qfalse;
+
+    emoticon++;
+  }
+  return ((*filename == '*' && !*(filename + 1)) || (!*filename && !*emoticon)) ? qtrue : qfalse;
+}
+
+qboolean UI_Text_IsEmoticon(const char *s, qboolean *escaped, int *length, qhandle_t *h, qhandle_t *hColor , int *width, vec4_t forceColor)
 {
     const char *p = s;
     char emoticon[MAX_EMOTICON_NAME_LEN];
-    int i;
+    int i, j;
     int emoticonLength = 0;
 
     if (*p != '[')
@@ -1885,18 +1899,26 @@ qboolean UI_Text_IsEmoticon(const char *s, qboolean *escaped, int *length, qhand
     else
         *escaped = qfalse;
 
+    if (forceColor)
+    {
+        if (Q_IsColorString(p))
+            memcpy(&forceColor[0], &(g_color_table[ColorIndex(*(p + 1))])[0], sizeof(vec4_t));
+        else
+            memcpy(&forceColor[0], &colorWhite[0], sizeof(vec4_t));
+    }
+
     for (*length = 0; p[*length] != ']'; (*length)++)
     {
         if (!p[*length] || *length == MAX_EMOTICON_NAME_LEN - 1)
             return qfalse;
 
         if ( p[*length] != Q_COLOR_ESCAPE && ( !*length || p[*length - 1] != Q_COLOR_ESCAPE ) )
-          emoticon[emoticonLength++] = p[*length];
+          emoticon[emoticonLength++] = tolower(p[*length]);
     }
     emoticon[emoticonLength] = '\0';
 
     for (i = 0; i < DC->Assets.emoticonCount; i++)
-        if (!Q_stricmp(DC->Assets.emoticons[i].name, emoticon))
+        if (UI_EmoticonMatch(DC->Assets.emoticons[i].name, emoticon))
             break;
 
     if (i == DC->Assets.emoticonCount)
@@ -1906,6 +1928,19 @@ qboolean UI_Text_IsEmoticon(const char *s, qboolean *escaped, int *length, qhand
         *h = DC->Assets.emoticons[i].shader;
     if (width)
         *width = DC->Assets.emoticons[i].width;
+
+    if (hColor)
+    {
+      Q_strcat(emoticon, MAX_EMOTICON_NAME_LEN, "-overlay");
+
+      for (j = 0; j < DC->Assets.emoticonCount; j++)
+          if (!Q_stricmp(DC->Assets.emoticons[j].name, emoticon))
+              break;
+
+      if (j != DC->Assets.emoticonCount
+          && DC->Assets.emoticons[i].width == DC->Assets.emoticons[j].width)
+        *hColor = DC->Assets.emoticons[j].shader;
+    }
 
     (*length) += 2;
 
@@ -1981,7 +2016,7 @@ float UI_Char_Width(const char **text, float scale)
 
         font = UI_FontForScale(scale);
 
-        if (UI_Text_IsEmoticon(*text, &emoticonEscaped, &emoticonLen, NULL, &emoticonWidth))
+        if (UI_Text_IsEmoticon(*text, &emoticonEscaped, &emoticonLen, NULL, NULL, &emoticonWidth, NULL))
         {
             if (emoticonEscaped)
                 (*text)++;
@@ -2131,10 +2166,12 @@ static void UI_Text_Paint_Generic(float x, float y, float scale, float gapAdjust
     int len;
     int count = 0;
     vec4_t newColor;
+    vec4_t forceColor;
     fontInfo_t *font = UI_FontForScale(scale);
     glyphInfo_t *glyph;
     float useScale;
     qhandle_t emoticonHandle = 0;
+    qhandle_t emoticonColorHandle = 0;
     float emoticonH, emoticonW;
     qboolean emoticonEscaped;
     int emoticonLen = 0;
@@ -2187,13 +2224,14 @@ static void UI_Text_Paint_Generic(float x, float y, float scale, float gapAdjust
                 continue;
             }
 
-            if (UI_Text_IsEmoticon(s, &emoticonEscaped, &emoticonLen, &emoticonHandle, &emoticonWidth))
+            if (UI_Text_IsEmoticon(s, &emoticonEscaped, &emoticonLen, &emoticonHandle, &emoticonColorHandle, &emoticonWidth, forceColor))
             {
                 if (emoticonEscaped)
                     s++;
                 else
                 {
                     float yadj = useScale * glyph->top;
+                    forceColor[3] = newColor[3];
 
                     DC->setColor(NULL);
 
@@ -2210,6 +2248,8 @@ static void UI_Text_Paint_Generic(float x, float y, float scale, float gapAdjust
 
                         DC->setColor(colorBlack);
                         DC->drawHandlePic(x + ofs, y + ofs - yadj, (emoticonW * emoticonWidth), emoticonH, emoticonHandle);
+                        if (emoticonColorHandle)
+                          DC->drawHandlePic(x + ofs, y + ofs - yadj, (emoticonW * emoticonWidth), emoticonH, emoticonColorHandle);
                         DC->setColor(NULL);
 
                         colorBlack[3] = 1.0f;
@@ -2218,6 +2258,11 @@ static void UI_Text_Paint_Generic(float x, float y, float scale, float gapAdjust
                     DC->setColor(colorWhite);
                     colorWhite[3] = 1;
                     DC->drawHandlePic(x, y - yadj, (emoticonW * emoticonWidth), emoticonH, emoticonHandle);
+                    if (emoticonColorHandle)
+                    {
+                      DC->setColor(forceColor);
+                      DC->drawHandlePic(x, y - yadj, (emoticonW * emoticonWidth), emoticonH, emoticonColorHandle);
+                    }
                     DC->setColor(newColor);
                     x += (emoticonW * emoticonWidth) + gapAdjust;
                     s += emoticonLen;
