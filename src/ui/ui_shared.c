@@ -5820,7 +5820,16 @@ void Item_ListBox_Paint(itemDef_t *item)
     int i;
     listBoxDef_t *listPtr = item->typeData.list;
     int count = DC->feederCount(item->feederID);
-    qboolean scrollbar = !(listPtr->noscrollbar && count > Item_ListBox_NumItemsForItemHeight(item));
+    qboolean disabled = count <= Item_ListBox_NumItemsForItemHeight(item);
+    qboolean scrollbar = !(listPtr->noscrollbar && disabled);
+
+    if (disabled)
+    {
+      colorWhite[3] = 0.35;
+      DC->setColor(colorWhite);
+      colorWhite[3] = 1;
+    }
+
     if (scrollbar)
     {
         float x = SCROLLBAR_SLIDER_X(item);
@@ -5842,6 +5851,9 @@ void Item_ListBox_Paint(itemDef_t *item)
         // Thumb
         DC->drawHandlePic(x, thumbY, SCROLLBAR_ARROW_WIDTH, SCROLLBAR_ARROW_HEIGHT, DC->Assets.scrollBarThumb);
     }
+
+    if (disabled)
+      DC->setColor(NULL);
 
     // Paint rows
     for (i = listPtr->startPos; i < listPtr->endPos; i++)
