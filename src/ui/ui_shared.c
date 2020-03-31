@@ -5351,52 +5351,72 @@ void Item_Cycle_Paint(itemDef_t *item)
 typedef struct {
     char *command;
     int id;
-    int bind1;
-    int bind2;
-    int bind3;
+    keyCombination_t bind1;
+    keyCombination_t bind2;
+    keyCombination_t bind3;
 } bind_t;
 
-static bind_t g_bindings[] = {{"+scores", -1, -1, -1, -1}, {"+button2", -1, -1, -1, -1},
-    {"+speed", -1, -1, -1, -1}, {"+button6", -1, -1, -1, -1},  // human dodging
-    {"+button8", -1, -1, -1, -1}, {"+forward", -1, -1, -1, -1}, {"+back", -1, -1, -1, -1},
-    {"+moveleft", -1, -1, -1, -1}, {"+moveright", -1, -1, -1, -1}, {"+moveup", -1, -1, -1, -1},
-    {"+movedown", -1, -1, -1, -1}, {"+left", -1, -1, -1, -1},
-    {"+right", -1, -1, -1, -1}, {"+strafe", -1, -1, -1, -1}, {"+lookup", -1, -1, -1, -1},
-    {"+lookdown", -1, -1, -1, -1}, {"+mlook", -1, -1, -1, -1}, {"centerview", -1, -1, -1, -1},
-    {"+zoom", -1, -1, -1, -1}, {"weapon 1", -1, -1, -1, -1}, {"weapon 2", -1, -1, -1, -1},
-    {"weapon 3", -1, -1, -1, -1}, {"weapon 4", -1, -1, -1, -1}, {"weapon 5", -1, -1, -1, -1},
-    {"weapon 6", -1, -1, -1, -1}, {"weapon 7", -1, -1, -1, -1}, {"weapon 8", -1, -1, -1, -1},
-    {"weapon 9", -1, -1, -1, -1}, {"weapon 10", -1, -1, -1, -1}, {"weapon 11", -1, -1, -1, -1},
-    {"weapon 12", -1, -1, -1, -1}, {"weapon 13", -1, -1, -1, -1}, {"+attack", -1, -1, -1, -1},
-    {"+button5", -1, -1, -1, -1},  // secondary attack
-    {"reload", -1, -1, -1, -1},  // reload
-    {"buy ammo", -1, -1, -1, -1},  // buy ammo
-    {"itemact medkit", -1, -1, -1, -1},  // use medkit
-    {"rotatebuildleft", -1, -1, -1, -1},  // Rotate ghost build to left
-    {"rotatebuildright", -1, -1, -1, -1},  // Rotate ghost build to right
-    {"rotatebuild", -1, -1, -1, -1},  // Reset ghost build rotation
-    {"+button7", -1, -1, -1, -1},  // buildable use
-    {"deconstruct", -1, -1, -1, -1},  // buildable destroy
-    {"weapprev", -1, -1, -1, -1}, {"weapnext", -1, -1, -1, -1}, {"+button3", -1, -1, -1, -1},
-    {"+button4", -1, -1, -1, -1}, {"vote yes", -1, -1, -1, -1}, {"vote no", -1, -1, -1, -1},
-    {"teamvote yes", -1, -1, -1, -1}, {"teamvote no", -1, -1, -1, -1}, {"ready", -1, -1, -1, -1},
-    {"scoresUp", -1, -1, -1, -1}, {"scoresDown", -1, -1, -1, -1},
-    {"screenshotJPEG", -1, -1, -1, -1}, {"messagemode", -1, -1, -1, -1}, {"messagemode2", -1, -1, -1, -1}};
+// If only anybody had the idea to use this before
+#define NULLKEYS -1, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}
+
+static bind_t g_bindings[] = {{"+scores", NULLKEYS}, {"+button2", NULLKEYS},
+    {"+speed", NULLKEYS}, {"+button6", NULLKEYS},  // human dodging
+    {"+button8", NULLKEYS}, {"+forward", NULLKEYS}, {"+back", NULLKEYS},
+    {"+moveleft", NULLKEYS}, {"+moveright", NULLKEYS}, {"+moveup", NULLKEYS},
+    {"+movedown", NULLKEYS}, {"+left", NULLKEYS},
+    {"+right", NULLKEYS}, {"+strafe", NULLKEYS}, {"+lookup", NULLKEYS},
+    {"+lookdown", NULLKEYS}, {"+mlook", NULLKEYS}, {"centerview", NULLKEYS},
+    {"+zoom", NULLKEYS}, {"weapon 1", NULLKEYS}, {"weapon 2", NULLKEYS},
+    {"weapon 3", NULLKEYS}, {"weapon 4", NULLKEYS}, {"weapon 5", NULLKEYS},
+    {"weapon 6", NULLKEYS}, {"weapon 7", NULLKEYS}, {"weapon 8", NULLKEYS},
+    {"weapon 9", NULLKEYS}, {"weapon 10", NULLKEYS}, {"weapon 11", NULLKEYS},
+    {"weapon 12", NULLKEYS}, {"weapon 13", NULLKEYS}, {"+attack", NULLKEYS},
+    {"+button5", NULLKEYS},  // secondary attack
+    {"reload", NULLKEYS},  // reload
+    {"buy ammo", NULLKEYS},  // buy ammo
+    {"itemact medkit", NULLKEYS},  // use medkit
+    {"rotatebuildleft", NULLKEYS},  // Rotate ghost build to left
+    {"rotatebuildright", NULLKEYS},  // Rotate ghost build to right
+    {"rotatebuild", NULLKEYS},  // Reset ghost build rotation
+    {"+button7", NULLKEYS},  // buildable use
+    {"deconstruct", NULLKEYS},  // buildable destroy
+    {"weapprev", NULLKEYS}, {"weapnext", NULLKEYS}, {"+button3", NULLKEYS},
+    {"+button4", NULLKEYS}, {"vote yes", NULLKEYS}, {"vote no", NULLKEYS},
+    {"teamvote yes", NULLKEYS}, {"teamvote no", NULLKEYS}, {"ready", NULLKEYS},
+    {"scoresUp", NULLKEYS}, {"scoresDown", NULLKEYS},
+    {"screenshotJPEG", NULLKEYS}, {"messagemode", NULLKEYS}, {"messagemode2", NULLKEYS}};
 
 static const size_t g_bindCount = ARRAY_LEN(g_bindings);
+
+static void Controls_ResetKeyCombination(keyCombination_t *combi)
+{
+  combi->key1 = -1;
+  combi->key2 = -1;
+  combi->key3 = -1;
+}
+
+static void Controls_ResetBind(bind_t *bind)
+{
+  Controls_ResetKeyCombination(&bind->bind1);
+  Controls_ResetKeyCombination(&bind->bind2);
+  Controls_ResetKeyCombination(&bind->bind3);
+}
 
 /*
 =================
 Controls_GetKeyAssignment
 =================
 */
-static void Controls_GetKeyAssignment(char *command, int *threekeys)
+static void Controls_GetKeyAssignment(char *command, keyCombination_t *combinations)
 {
     int count;
     int j;
     char b[256];
 
-    threekeys[0] = threekeys[1] = threekeys[2] = -1;
+    Controls_ResetKeyCombination(&(combinations[0]));
+    Controls_ResetKeyCombination(&(combinations[1]));
+    Controls_ResetKeyCombination(&(combinations[2]));
+
     count = 0;
 
     for (j = 0; j < MAX_KEYS; j++)
@@ -5427,15 +5447,15 @@ Iterate each command, get its numeric binding
 void Controls_GetConfig(void)
 {
     size_t i;
-    int threekeys[3];
+    keyCombination_t combinations[3];
 
     for (i = 0; i < g_bindCount; i++)
     {
-        Controls_GetKeyAssignment(g_bindings[i].command, threekeys);
+        Controls_GetKeyAssignment(g_bindings[i].command, &combinations);
 
-        g_bindings[i].bind1 = threekeys[0];
-        g_bindings[i].bind2 = threekeys[1];
-        g_bindings[i].bind3 = threekeys[2];
+        g_bindings[i].bind1 = combinations[0];
+        g_bindings[i].bind2 = combinations[1];
+        g_bindings[i].bind3 = combinations[2];
     }
 }
 

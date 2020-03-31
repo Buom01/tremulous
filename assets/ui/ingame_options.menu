@@ -1639,6 +1639,90 @@
       }
     }
 
+//////// MODIFIERS
+
+    itemDef
+    {
+      name controls
+      text "Modifiers"
+      group optionsGrp
+      style WINDOW_STYLE_EMPTY
+      rect 0 ((2*BORDER)+TOPBUTT_H+(4*SIDEBUTT_H)) SIDEBUTT_W SIDEBUTT_H
+      type ITEM_TYPE_BUTTON
+      textalign ALIGN_RIGHT
+      textvalign VALIGN_CENTER
+      textscale .25
+      forecolor 1 1 1 1
+      visible MENU_FALSE
+      action
+      {
+        play "sound/misc/menu1.wav";
+        hide optionsGrp;
+        show controls;
+        show modifiers
+      }
+    }
+
+    itemDef
+    {
+      name misc
+      group optionsGrp
+      type ITEM_TYPE_MODIFIER
+      text "First level modifier:"
+      cvar "+modifier1"
+      rect SCONTENT_X (SCONTENT_Y+(0*ELEM_H)) SCONTENT_W ELEM_H
+      textalign ALIGN_RIGHT
+      textvalign VALIGN_CENTER
+      textalignx SCONTENT_OFF
+      textscale .25
+      forecolor 1 1 1 1
+      visible MENU_FALSE
+      action
+      {
+        play "sound/misc/menu1.wav";
+      }
+    }
+
+    itemDef
+    {
+      name misc
+      group optionsGrp
+      type ITEM_TYPE_MODIFIER
+      text "Second level modifier:"
+      cvar "+modifier2"
+      rect SCONTENT_X (SCONTENT_Y+(1*ELEM_H)) SCONTENT_W ELEM_H
+      textalign ALIGN_RIGHT
+      textvalign VALIGN_CENTER
+      textalignx SCONTENT_OFF
+      textscale .25
+      forecolor 1 1 1 1
+      visible MENU_FALSE
+      action
+      {
+        play "sound/misc/menu1.wav";
+      }
+    }
+
+    itemDef
+    {
+      name misc
+      group optionsGrp
+      type ITEM_TYPE_MODIFIER
+      text "Third level modifier:"
+      cvar "+modifier3"
+      rect SCONTENT_X (SCONTENT_Y+(2*ELEM_H)) SCONTENT_W ELEM_H
+      textalign ALIGN_RIGHT
+      textvalign VALIGN_CENTER
+      textalignx SCONTENT_OFF
+      textscale .25
+      forecolor 1 1 1 1
+      visible MENU_FALSE
+      action
+      {
+        play "sound/misc/menu1.wav";
+      }
+    }
+
 //////// JOYSTICK
 
     itemDef
@@ -1647,7 +1731,7 @@
       text "Joystick"
       group optionsGrp
       style WINDOW_STYLE_EMPTY
-      rect 0 ((2*BORDER)+TOPBUTT_H+(4*SIDEBUTT_H)) SIDEBUTT_W SIDEBUTT_H
+      rect 0 ((2*BORDER)+TOPBUTT_H+(5*SIDEBUTT_H)) SIDEBUTT_W SIDEBUTT_H
       type ITEM_TYPE_BUTTON
       textalign ALIGN_RIGHT
       textvalign VALIGN_CENTER
@@ -1833,7 +1917,7 @@
       text "Feedback"
       group optionsGrp
       style WINDOW_STYLE_EMPTY
-      rect 0 ((2*BORDER)+TOPBUTT_H+(5*SIDEBUTT_H)) SIDEBUTT_W SIDEBUTT_H
+      rect 0 ((2*BORDER)+TOPBUTT_H+(6*SIDEBUTT_H)) SIDEBUTT_W SIDEBUTT_H
       type ITEM_TYPE_BUTTON
       textalign ALIGN_RIGHT
       textvalign VALIGN_CENTER

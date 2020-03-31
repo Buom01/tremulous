@@ -47,6 +47,7 @@ bool key_overstrikeMode;
 
 int anykeydown;
 qkey_t keys[MAX_KEYS];
+binding_t bindings[MAX_BINDINGS];
 
 struct keyname_t {
 	const char* name;
@@ -953,6 +954,40 @@ const char *Key_KeynumToString( int keynum ) {
 }
 
 
+static qboolean Key_IsValidCombination( keyCombination_t keys )
+{
+	if (keys.key1 < 0 || keys.key1 >= MAX_KEYS)
+		return qfalse;
+	if (keys.key2 < -1 || keys.key1 >= MAX_KEYS)
+		return qfalse;
+	if (keys.key3 < -1 || keys.key1 >= MAX_KEYS)
+		return qfalse;
+
+	return qtrue;
+}
+
+static void Key_FreeUpConflict( keyCombination_t keys )
+{
+
+	// should also isolate group of conflict
+
+	return qtrue;
+}
+
+static void Key_AppendBinding( keyCombination_t keys, char *binding )
+{
+	int firstFreeSlot = 0;
+
+	while (bindings[firstFreeSlot].binding && firstFreeSlot < MAX_BINDINGS)
+		firstFreeSlot++;
+
+	bindings[firstFreeSlot].binding = CopyString( binding );
+	::memcpy(bindings[firstFreeSlot].keys, keys, sizeof(keyCombination_t));
+
+	// should also save group of conflict
+}
+
+
 /*
 ===================
 Key_SetBinding
@@ -963,13 +998,33 @@ void Key_SetBinding( int keynum, const char *binding ) {
 		return;
 	}
 
-	// free old bindings
-	if ( keys[ keynum ].binding ) {
-		Z_Free( keys[ keynum ].binding );
-	}
+	// // free old bindings
+	// if ( keys[ keynum ].binding ) {
+	// 	Z_Free( keys[ keynum ].binding );
+	// }
+	//
+	// // allocate memory for new binding
+	// keys[keynum].binding = CopyString( binding );
+	//
+	// // consider this like modifying an archived cvar, so the
+	// // file write will be triggered at the next oportunity
+	// cvar_modifiedFlags |= CVAR_ARCHIVE;
+}
+
+/*
+===================
+Key_SetNewBinding
+Can be one key or combination, and could be isolated to avoid conflict
+===================
+*/
+void Key_SetNewBinding( keyCombination_t keys, const char *binding ) {
+	if ( !Key_IsValidCombination(keys) )
+		return;
+
+	Key_FreeUpConflict(keys);
 
 	// allocate memory for new binding
-	keys[keynum].binding = CopyString( binding );
+	Key_AppendBinding(keys, binding);
 
 	// consider this like modifying an archived cvar, so the
 	// file write will be triggered at the next oportunity
@@ -988,6 +1043,28 @@ const char *Key_GetBinding( int keynum ) {
 	}
 
 	return keys[ keynum ].binding;
+}
+
+/*
+===================
+Key_GetNewBinding
+===================
+*/
+const char *Key_GetNewBinding( keyCombination_t keys ) {
+	int i = 0;
+
+	if ( !Key_IsValidCombination(keys) )
+		return "";
+
+	while (bindings[i].binding && i < MAX_BINDINGS)
+	{
+		if ( ::memcmp(bindings[i].binding.keys, keys, sizeof(keyCombination_t)) == 0 )
+			return bindings[i].binding;
+
+		i++;
+	}
+
+	return "";
 }
 
 /*

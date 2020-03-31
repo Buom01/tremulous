@@ -29,11 +29,17 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 typedef struct {
     bool down;
     int repeats;  // if > 1, it is autorepeating
-    char *binding;
+    // char *binding;  // We do not associate a key to a bind anymore
 } qkey_t;
+
+typedef struct {
+  char *binding;
+  keyCombination_t keys;
+} binding_t;
 
 extern bool key_overstrikeMode;
 extern qkey_t keys[MAX_KEYS];
+extern binding_t bindings[MAX_BINDINGS];
 
 // NOTE TTimo the declaration of field_t and Field_Clear is now in qcommon/qcommon.h
 void Field_KeyDownEvent(field_t *edit, int key);

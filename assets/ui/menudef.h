@@ -20,7 +20,8 @@ enum
   ITEM_TYPE_SLIDER,       // mouse speed, volume, etc.
   ITEM_TYPE_YESNO,        // boolean cvar setting
   ITEM_TYPE_MULTI,        // multiple list setting, enumerated
-  ITEM_TYPE_BIND          // keyboard control configuration
+  ITEM_TYPE_BIND,         // keyboard control configuration
+  ITEM_TYPE_MODIFIER      // keyboard control modifier
 };
 
 #define ALIGN_LEFT   0 // left alignment

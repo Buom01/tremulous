@@ -312,4 +312,13 @@ typedef enum {
 #define K_FIRST_GAMEPAD_KEY K_PAD0_A
 #define K_LAST_GAMEPAD_KEY K_PAD0_RIGHTTRIGGER
 
+typedef struct {
+    int key1;
+    int key2;
+    int key3;
+} keyCombination_t;
+
+// There are 3 level of modifiers so there are 3! = 1 * 2 *3 = 6 comination of modifiers
+#define MAX_BINDINGS (MAX_KEYS * 6)
+
 #endif
