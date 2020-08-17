@@ -26,9 +26,9 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 #define __QCURL_H__
 
 #ifdef USE_LOCAL_HEADERS
-#include "curl/curl.h"
+  #include "../libcurl-7.35.0/curl/curl.h"
 #else
-#include <curl/curl.h>
+  #include <curl/curl.h>
 #endif
 
 #include "qcommon/q_shared.h"
